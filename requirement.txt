@@ -8,7 +8,7 @@ All items that are a part of a combo will be discounted by 15%
 3. Program needs to automatically group items into combos while ensuring that the most expensive items are added to combos first 
 4. Needs to provide a class named Inventory that contains the following methods:
     - get_number_of_items(): an async method that returns the number of unique items in the restaurants catalogue
-    - get_catalogue(): an async method that returns a dictionary containing the restaurants catalogue
+    - get_catalogue(): an async method that returns a dictionary containing the restaurant's catalogue
     - get_stock(item_id): Async method that returns the quantity of an item in the inventory based on its item_id
     - decrement_stock(item_id): An async method that decrements the count of an item in the inventory based on its item_id
     - get_item(item_id): An async method that returns the details abt a specific item based on its item_id 
@@ -27,4 +27,3 @@ All items that are a part of a combo will be discounted by 15%
     - Display the subtotal tax (default 5%) and total (subtotal + tax) of this order
     - Ask user for order confirmation 
     - Ask if user would like to order again
-     
