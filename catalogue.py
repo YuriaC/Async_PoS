@@ -1,85 +1,48 @@
 class Catalogue:
+    catalogue = {
+            "Burgers": (
+                {"id": 1, "name": "Python Burger", "price": 5.99},
+                {"id": 2, "name": "C Burger", "price": 4.99},
+                {"id": 3, "name": "Ruby Burger", "price": 6.49},
+                {"id": 4, "name": "Go Burger", "price": 5.99},
+                {"id": 5, "name": "C++ Burger", "price": 7.99},
+                {"id": 6, "name": "Java Burger", "price": 7.99}
+            ),
+            
+            "Sides": {
+                "Fries": (
+                    {"id": 7, "size": "Small", "price": 2.49},
+                    {"id": 8, "size": "Medium", "price": 3.49},
+                    {"id": 9, "size": "Large", "price": 4.29}
+                ),
+                "Caesar Salad": (
+                    {"id": 10, "size": "Small", "price": 3.49},
+                    {"id": 11, "size": "Large", "price": 4.49}
+                )
+            },
 
-    burgers = {    
-        1 : ("Python Burger", 5.99),
-        2 : ("C Burger", 4.99),     
-        3 : ("Ruby Burger", 6.49),
-        4 : ("Go Burger", 5.99),
-        5 : ("C++ Burger", 7.99),
-        6 : ("Java Burger", 7.99)
-    }
-
-    sides = {
-        
-        "Fries" : {
-            7 : ("Small", 2.49),
-            8 : ("Medium", 3.49),     
-            9 : ("Large", 4.29)
-        },
-        
-        # Caesar Salad 
-        "Caesar Salad" : {
-            10 : ("Small", 3.49),     
-            11 : ("Large", 4.49)
-        },
-    }
-    
-
-    drinks = {
-        "Coke" : {
-            12 : ("Small Coke", 1.99),
-            13 : ("Medium Coke", 2.49),     
-            14 : ("Large Coke", 2.99)
-        },
-
-
-        "Chocolate Milk Shake" : {
-            15 : ("Small", 1.99),     
-            16 : ("Medium", 2.49),
-            17 : ("Large", 2.99)
-        },
-
-
-        "Chocolate Milk Shake" : {
-            18 : ("Small", 1.99),     
-            19 : ("Medium", 2.49),
-            20 : ("Large", 2.99)
+            "Drinks": {
+                "Coke": (
+                    {"id": 12, "size": "Small", "price": 1.99},
+                    {"id": 13, "size": "Medium", "price": 2.49},
+                    {"id": 14, "size": "Large", "price": 2.99}
+                ),
+                "Ginger Ale": (
+                    {"id": 15, "size": "Small", "price": 1.99},
+                    {"id": 16, "size": "Medium", "price": 2.49},
+                    {"id": 17, "size": "Large", "price": 2.99}
+                ),
+                "Chocolate Milk Shake": (
+                    {"id": 18, "size": "Small", "price": 3.99},
+                    {"id": 19, "size": "Medium", "price": 4.49},
+                    {"id": 20, "size": "Large", "price": 4.99}
+                )
+            }
         }
 
-    }
 
     def __init__(self):
-        self.count = 0
-    
-    def count_item(self):
-        """ a method for returning total number of unique item within the catalogue"""
-        total_item_num = len(self.burgers) + len(self.sides) + len(self.drinks)
-        self.count = total_item_num
-
-    def __repr__(self):
-        """ a method for printing the catalogue object"""
-        print("--------- Burgers ----------- \n")
-        for key, tup in self.burgers.items():
-            print(f"{key}. {tup[0]} ${tup[1]}")
-        print("")
-
-        print("---------- Sides ------------ \n")
-        for key, dict in self.sides.items():
-            print(f"{key}:") 
-            for dict_key, dict_tup in dict.items():
-                print(f"{dict_key}. {dict_tup[0]} ${dict_tup[1]}")
-            print("")
-        print("")
-
-        print("---------- Drinks ------------ \n")
-        for key, dict in self.sides.items():
-            print(f"{key}:") 
-            for dict_key, dict_tup in dict.items():
-                print(f"{dict_key}. {dict_tup[0]} ${dict_tup[1]}")
-            print("")   
-        print("")
-
+        pass
 
     def add_item(self, category, name, price):
         pass  # for later implementation maybe switch to linked list data structure
-
