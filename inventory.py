@@ -10,7 +10,6 @@ class Inventory:
         self._generate_item_lookup_dict()  # initiate self.item attribute
         self.stock = {i + 1: random.randint(0, 15) for i in range(len(self.items))}  # randomly assign the stock for each item
 
-
     def _generate_item_lookup_dict(self):
         """ a class method that returns all the items in the catalogue as a dict obj within a bigger dict"""
         self.items = {}
@@ -35,7 +34,7 @@ class Inventory:
         """a decorator that serves to validate user input"""
         async def wrapper(self, val):
             if val not in self.stock:
-                raise ValueError ("Invalid item id!")
+                raise ValueError("Invalid item id!")
             
             else:
                 result = await func(self, val)
@@ -74,5 +73,20 @@ class Inventory:
     @verify_item_id
     async def get_item(self, item_id):
         """ An async method that returns the details abt a specific item based on its item_id """
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
         return self.items[item_id]
+
+    def __repr__(self):
+        """ a method that alters the print out version of the Inventory class obj"""
+        output = []
+        for id in self.items:
+            value = self.items[id]
+            if value["category"] == "Burgers":
+                str = f"{id}. {value['name']}  ${value['price']}; stock: {self.stock[id]}"
+                output.append(str)
+            
+            else:
+                str = f"{id}. {value['size']} {value['subcategory']}  ${value['price']}; stock: {self.stock[id]}"
+                output.append(str)
+
+        return "\n".join(output)
