@@ -35,13 +35,57 @@ def display_catalogue():
     
     print("------------------------------")
 
-def build_combo(lst):
+def order_placement_helper(inv_obj):
+    """ a function that helps user to place an order"""
+    user_selection = []
+    print("Please enter the number of items that you would like to add to your order. Enter q to complete your order.")
+    while True:  # user input validation
+        item = input("Enter an item number (q to end): ")
+        if item.isdigit():
+            item = int(item)
+
+            if item < 1 or item > len(inv_obj.items):
+                print(f"Sorry, but {item} is not a valid item number.")
+                item = input("Enter an item number (q to end): ")
+            
+            else: 
+                user_selection.append(item)
+            
+        elif item.lower() == "q":  # quitting ordering sequence
+            print("Placing order...")
+            break
+
+        else:
+            print("Please enter a valid number.")
+            item = input("Enter an item number (q to quit): ")
+
+    return user_selection
+
+def generate_order(user_selection):
+    """a function that helps to generate order by getting detailed item info based on user selection"""
+    order = []
+    if len(user_selection) == 0:
+        return None
+    
+    else: 
+        for item_id in user_selection:
+            stock_check = store_inventory.decrement_stock(item_id)  # returns bool type
+
+            if stock_check:  # if true
+                order.append(store_inventory.get_item(item_id))
+            
+            else:  # if there's no more of such item
+                print(f"Unfortunately item number {item_id} is out of stock and has been removed from your order. Sorry!")
+
+        return order
+
+def build_combo(order):
     """ a function that helps to automatically build combo, returns a lst obj """
     burger_bin = []
     side_bin = []
     drink_bin = []
     
-    for id in lst:
+    for id in order:
         item_detail = store_inventory.get_item(id)
         if item_detail["category"] == "Burgers":  # put burger in the burger_bin
             burger_bin.append(item_detail)
@@ -83,15 +127,20 @@ def build_combo(lst):
             combo.append(combo_dict)  # add the dict obj into combo 
         
         else:
+            other_order = burger_bin + side_bin + drink_bin
             break
     
-    return combo
+    return (combo, other_order)
 
-def print_combo(lst):
-    """ a function to print combo info into appropriate format"""
-    """use with build combo"""
+def print_summary(lst, lst2):
+    """ a function to print combo and other item into appropriate format. Also handels the cost calculation. 
+    Return a floating point obj"""
+    subtotal = 0
+    # handeling price and printing of combos 
     for dict_obj in lst:
         for price in dict_obj:  # price is the key for a dict_obj
+            subtotal += price   # calculating subtotal 
+            # formatting and printing
             combo = dict_obj[price]
             print(f"{'{0:.2f}'.format(price)} Burger Combo:")
             for item in combo:
@@ -101,97 +150,80 @@ def print_combo(lst):
                 else:
                     print(f"{item['size']}{item['subcategory']}")
 
-def cost_calculation():  # NOT IMPLEMENTED
-    """ a function that helps to calculate the subtotal and tax of an order"""
-    tax = None
-    subtotal = None
-    return (tax, subtotal)
+    # handeling price and printing of single items 
+    for dict_obj in lst2:
+        subtotal += item["price"]  # calculating subtotal
+        # handeling formatting and printing   
+        if dict_obj["category"] == "Burgers":  
+            print(f"${dict_obj['price']} {dict_obj['name']} ")
+        
+        else: 
+            print(f"${dict_obj['price']} {item['size']} {item['subcategory']}")
+
+    tax = round(subtotal * 0.05, 2)
+    total = tax + subtotal
+    print(f"Subtotal: ${'{0:.2f}'.format(subtotal)} \nTax: ${'{0:.2f}'.format(tax)} \nTotal: ${'{0:.2f}'.format(total)}")
+    
+    return total 
 
 def bool_user_input_validator(user_input, prompt):
     """ a function that helps to validate boolean user input"""
-    while True:  # user input validation
+    while True:
         if user_input.lower() == "y":
             return True
 
         elif user_input.lower() == "N":
-            # cancel order, restore stock
             return False
 
         else:
             print("Sorry but your input is invalid.")
             user_input = input(prompt)
 
-
-def order_placement_helper(inv_obj):  # NEED MORE IMPLEMENTATION
-    """ a function that helps user to place an order"""
-    user_selection = []
-    print("Please enter the number of items that you would like to add to your order. Enter q to complete your order.")
-    while True:  # user input validation
-        item = input("Enter an item number (q to end): ")
-        if item.isdigit():
-            item = int(item)
-
-            if item < 1 or item > len(inv_obj.items):
-                print(f"Sorry, but {item} is not a valid item number.")
-                item = input("Enter an item number (q to end): ")
-            
-            else: 
-                user_selection.append(item)
-
-        # and prodcut availability should be checked 
-            
-        elif item.lower() == "q":  # quitting ordering sequence
-            print("Placing order...")
-            break
-
-        else:
-            print("Please enter a valid number.")
-            item = input("Enter an item number (q to quit): ")
-
-    return user_selection
+def place_order(confirmation, order):
+    """ a function takes a bool type and a lst type. It serves to choose if or not to place order"""
+    if confirmation:  # if true
+        print("Thank you for your order!")
+    
+    else:  # if false
+        for item_id in order:
+            store_inventory.stock[item_id] += 1  # restore stock
+        
+        order.clear()
+        print("No worries. We look forward to serve you again!")
 
 
 async def main():
     print("Welcome to the ProgrammingExpert Burger Bar @ Yuria brach!")
     print("Here is our menu: " )
-    sleep(2)
-    
-    display_catalogue()
+    sleep(2)  # mimic loading 
+    display_catalogue()  # show menu
 
-    order_placement_helper(store_inventory)  # function yet to be completed 
+    while True:
+        user_selection = order_placement_helper(store_inventory)
+        print("Placing order...")
+        
+        if len(user_selection) != 0:  # if user selected any items
+            # order processing phase
+            order = generate_order(user_selection)  # retrive item detail and checking stock
+            (combo, other_order) = build_combo(order)  # generating combo outta all items
+            total = print_summary(combo, other_order)  # handeling printing and fees 
 
-    build_combo()  # function yet to be implemented 
+            # order confirmation phase
+            prompt = f"Would you like to purchase this order for ${total}? (Y/N): "
+            confirmation = input(prompt)  # order comfirmation 
+            result = bool_user_input_validator(confirmation, prompt)
+            
+            # finalizing interaction phase
+            place_order(result, order)
 
-    (tax, subtotal) = cost_calculation()  # function yet to be implemented 
-    total = tax + subtotal
-    
+        
+        prompt = "Would you like to make another order? (Y/N):"
+        choice = input(prompt)
+        result = bool_user_input_validator(choice, prompt)
+        if not result:  # if user don't wish to make another order
+            print("Enjoy and have a good one!")
+            break  # break out of while loop
 
-    print("Here is your order summary: ")
-    print(f"Subtotal: ${subtotal} \n Tax: ${tax} \n Total: ${total}")
-
-    # order confirmation phase
-    prompt = "Would you like to purchase this order for $12.92? (Y/N): "
-    confirmation = input(prompt)  # order comfirmation 
-    result = bool_user_input_validator(confirmation, prompt)
-    if result:  # if user confirm order 
-        print("Thank you for your order!")
-        # proceed to confrim order 
-        pass
-    else:  
-        print("No worries! We look forward to serve you again!")
-        # proceed to cancel order and restore inventory stock
-        pass
-
-    
-    prompt = "Would you like to make another order? (Y/N):"
-    choice = input(prompt)
-    result = bool_user_input_validator(choice, prompt)
-    if result:
-        order_placement_helper(store_inventory)
-        # still need to implement combo making and price calculation and order comfirmation next
-        # maybe use recursion?
-    else: 
-        print("Enjoy and have a good one!")
 
 if __name__ == "__main__":
     asyncio.run(main())
