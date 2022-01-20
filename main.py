@@ -35,7 +35,7 @@ def display_catalogue():
     
     print("------------------------------")
 
-def order_placement_helper(inv_obj):
+def order_placement_helper(inv_obj): # checked
     """ a function that helps user to place an order"""
     user_selection = []
     print("Please enter the number of items that you would like to add to your order. Enter q to complete your order.")
@@ -45,8 +45,8 @@ def order_placement_helper(inv_obj):
             item = int(item)
 
             if item < 1 or item > len(inv_obj.items):
+                print(len(inv_obj.items))
                 print(f"Sorry, but {item} is not a valid item number.")
-                item = input("Enter an item number (q to end): ")
             
             else: 
                 user_selection.append(item)
@@ -56,12 +56,11 @@ def order_placement_helper(inv_obj):
             break
 
         else:
-            print("Please enter a valid number.")
-            item = input("Enter an item number (q to quit): ")
+            print("Please enter a valid item number.")
 
     return user_selection
 
-def generate_order(user_selection):
+async def generate_order(user_selection):
     """a function that helps to generate order by getting detailed item info based on user selection"""
     order = []
     if len(user_selection) == 0:
@@ -69,10 +68,13 @@ def generate_order(user_selection):
     
     else: 
         for item_id in user_selection:
-            stock_check = store_inventory.decrement_stock(item_id)  # returns bool type
+            task1 = asyncio.create_task(store_inventory.decrement_stock(item_id))  # returns bool type
+            stock_check = await task1
 
             if stock_check:  # if true
-                order.append(store_inventory.get_item(item_id))
+                task2 = asyncio.create_task(store_inventory.get_item(item_id))
+                item_detail = await task2
+                order.append(item_detail)
             
             else:  # if there's no more of such item
                 print(f"Unfortunately item number {item_id} is out of stock and has been removed from your order. Sorry!")
@@ -81,12 +83,17 @@ def generate_order(user_selection):
 
 def build_combo(order):
     """ a function that helps to automatically build combo, returns a lst obj """
+
+
+    def sort_method(dict):
+        """ a local method for sorting lst"""
+        return dict["price"]
+
     burger_bin = []
     side_bin = []
     drink_bin = []
     
-    for id in order:
-        item_detail = store_inventory.get_item(id)
+    for item_detail in order:
         if item_detail["category"] == "Burgers":  # put burger in the burger_bin
             burger_bin.append(item_detail)
         
@@ -95,10 +102,6 @@ def build_combo(order):
         
         elif item_detail["category"] == "Drinks":
             drink_bin.append(item_detail)  # put drink in the drink_bin
-    
-        def sort_method(dict):
-            """ a local method for sorting lst"""
-            return dict["price"]
 
     burger_bin.sort(key= sort_method)  # sort item bin by ascending price order
     side_bin.sort(key= sort_method)
@@ -142,23 +145,25 @@ def print_summary(lst, lst2):
             subtotal += price   # calculating subtotal 
             # formatting and printing
             combo = dict_obj[price]
-            print(f"{'{0:.2f}'.format(price)} Burger Combo:")
+            print(f"\n${'{0:.2f}'.format(price)} Burger Combo:")
             for item in combo:
                 if item["category"] == "Burgers":
-                    print(f"{item['name']}") 
+                    print(f"  {item['name']}") 
                     
                 else:
-                    print(f"{item['size']}{item['subcategory']}")
+                    print(f"  {item['size']} {item['subcategory']}")
+            print("")
 
     # handeling price and printing of single items 
     for dict_obj in lst2:
-        subtotal += item["price"]  # calculating subtotal
+        subtotal += dict_obj["price"]  # calculating subtotal
         # handeling formatting and printing   
         if dict_obj["category"] == "Burgers":  
             print(f"${dict_obj['price']} {dict_obj['name']} ")
         
         else: 
-            print(f"${dict_obj['price']} {item['size']} {item['subcategory']}")
+            print(f"${dict_obj['price']} {dict_obj['size']} {dict_obj['subcategory']}")
+    print("")
 
     tax = round(subtotal * 0.05, 2)
     total = tax + subtotal
@@ -172,7 +177,7 @@ def bool_user_input_validator(user_input, prompt):
         if user_input.lower() == "y":
             return True
 
-        elif user_input.lower() == "N":
+        elif user_input.lower() == "n":
             return False
 
         else:
@@ -186,25 +191,24 @@ def place_order(confirmation, order):
     
     else:  # if false
         for item_id in order:
-            store_inventory.stock[item_id] += 1  # restore stock
+            store_inventory.stock[item_id["id"]] += 1  # restore stock
         
         order.clear()
         print("No worries. We look forward to serve you again!")
 
-
 async def main():
     print("Welcome to the ProgrammingExpert Burger Bar @ Yuria brach!")
     print("Here is our menu: " )
-    sleep(2)  # mimic loading 
+    sleep(1.5)  # mimic loading 
     display_catalogue()  # show menu
 
     while True:
         user_selection = order_placement_helper(store_inventory)
-        print("Placing order...")
         
         if len(user_selection) != 0:  # if user selected any items
             # order processing phase
-            order = generate_order(user_selection)  # retrive item detail and checking stock
+            task1 = asyncio.create_task(generate_order(user_selection))  # retrive item detail and checking stock
+            order = await task1
             (combo, other_order) = build_combo(order)  # generating combo outta all items
             total = print_summary(combo, other_order)  # handeling printing and fees 
 
@@ -221,7 +225,7 @@ async def main():
         choice = input(prompt)
         result = bool_user_input_validator(choice, prompt)
         if not result:  # if user don't wish to make another order
-            print("Enjoy and have a good one!")
+            print("Thank you for visiting! Wish you have a good one.")
             break  # break out of while loop
 
 

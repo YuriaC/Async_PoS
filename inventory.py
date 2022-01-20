@@ -63,6 +63,7 @@ class Inventory:
     async def decrement_stock(self, item_id, count = 1):
         """ An async method that decrements the count (default as 1) of an item in the inventory based on its item_id, returns bool type """
         current_stock = self.stock[item_id]
+        await asyncio.sleep(1)
         if current_stock <= 0:
             return False
         
