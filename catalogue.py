@@ -41,7 +41,7 @@ class Catalogue:
         }
 
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def add_item(self, category, name, price):
