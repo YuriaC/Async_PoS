@@ -5,7 +5,6 @@ from catalogue import Catalogue
 class Inventory:
 
     def __init__(self):
-        
         self.catalogue = Catalogue.catalogue
         self._generate_item_lookup_dict()  # initiate self.item attribute
         self.stock = {i + 1: random.randint(0, 15) for i in range(len(self.items))}  # randomly assign the stock for each item
@@ -49,14 +48,14 @@ class Inventory:
         
     async def get_catalogue(self):
         """ An async method that returns a dictionary containing the restaurant's catalogue """
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
         return self.catalogue
 
     @verify_item_id
     async def get_stock(self, item_id):
         """ An Async method that returns the quantity of an item in the inventory based on its item_id """
         current_stock = self.stock[item_id]
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
         return current_stock
 
     @verify_item_id

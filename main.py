@@ -22,8 +22,6 @@ def display_catalogue():
         for item in item_collection: 
             print(f'{item["id"]}. {item["size"]} ${item["price"]}')
         print("")
-    print("")
-
 
     print("---------- Drinks ------------ \n")
     for subcategory in Catalogue.catalogue["Drinks"]:
@@ -35,8 +33,9 @@ def display_catalogue():
     
     print("------------------------------")
 
-def order_placement_helper(inv_obj): # checked
+async def order_placement_helper(inv_obj):
     """ a function that helps user to place an order"""
+    tasks = []
     user_selection = []
     print("Please enter the number of items that you would like to add to your order. Enter q to complete your order.")
     while True:  # user input validation
@@ -45,14 +44,18 @@ def order_placement_helper(inv_obj): # checked
             item = int(item)
 
             if item < 1 or item > len(inv_obj.items):
-                print(len(inv_obj.items))
                 print(f"Sorry, but {item} is not a valid item number.")
             
             else: 
-                user_selection.append(item)
-            
+                task = asyncio.gather(store_inventory.decrement_stock(item), store_inventory.get_item(item))
+                tasks.append(task)
+                
         elif item.lower() == "q":  # quitting ordering sequence
             print("Placing order...")
+            for task in tasks:
+                result = await task
+                user_selection.append(result)
+
             break
 
         else:
@@ -60,30 +63,24 @@ def order_placement_helper(inv_obj): # checked
 
     return user_selection
 
-async def generate_order(user_selection):
+def generate_order(user_selection):
     """a function that helps to generate order by getting detailed item info based on user selection"""
     order = []
     if len(user_selection) == 0:
         return None
     
     else: 
-        for item_id in user_selection:
-            task1 = asyncio.create_task(store_inventory.decrement_stock(item_id))  # returns bool type
-            stock_check = await task1
-
-            if stock_check:  # if true
-                task2 = asyncio.create_task(store_inventory.get_item(item_id))
-                item_detail = await task2
-                order.append(item_detail)
+        for item in user_selection:
+            if item[0]:  # if true
+                order.append(item[1])
             
             else:  # if there's no more of such item
-                print(f"Unfortunately item number {item_id} is out of stock and has been removed from your order. Sorry!")
+                print(f"Unfortunately item number {item[1]['id']} is out of stock and has been removed from your order. Sorry!")
 
         return order
 
 def build_combo(order):
     """ a function that helps to automatically build combo, returns a lst obj """
-
 
     def sort_method(dict):
         """ a local method for sorting lst"""
@@ -203,14 +200,14 @@ async def main():
     display_catalogue()  # show menu
 
     while True:
-        user_selection = order_placement_helper(store_inventory)
+        task = asyncio.create_task(order_placement_helper(store_inventory))
+        user_selection = await task
         
         if len(user_selection) != 0:  # if user selected any items
-            # order processing phase
-            task1 = asyncio.create_task(generate_order(user_selection))  # retrive item detail and checking stock
-            order = await task1
+            # order processing phase     
+            order = generate_order(user_selection)  # retrive item detail and checking stock
             (combo, other_order) = build_combo(order)  # generating combo outta all items
-            total = print_summary(combo, other_order)  # handeling printing and fees 
+            total = round(print_summary(combo, other_order), 2)  # handeling printing and fees 
 
             # order confirmation phase
             prompt = f"Would you like to purchase this order for ${total}? (Y/N): "
